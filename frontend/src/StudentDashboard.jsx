@@ -1,6 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import axios from 'axios';
-import { Clock, Book, Search, LogOut, ChevronLeft, ChevronRight, CheckCircle, Star } from 'lucide-react';
+import { Clock, Book, Search, LogOut, ChevronLeft, ChevronRight, CheckCircle, Star, MoveHorizontal } from 'lucide-react';
+import HTMLFlipBook from 'react-pageflip';
+
+const Page = forwardRef((props, ref) => {
+    return (
+        <div className="demoPage" ref={ref} style={{
+            background: '#fff',
+            padding: '20px',
+            border: '1px solid #ddd',
+            boxShadow: 'inset 0 0 50px rgba(0,0,0,0.1)',
+            height: '100%',
+            color: '#333',
+            overflowY: 'auto',
+            position: 'relative'
+        }}>
+            <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left', fontSize: '1.1rem', lineHeight: '1.6' }}>
+                {props.children}
+            </div>
+            <div style={{ position: 'absolute', bottom: '10px', right: '10px', fontSize: '0.8rem', color: '#999' }}>
+                {props.number}
+            </div>
+        </div>
+    );
+});
 
 const StudentDashboard = ({ user, onLogout }) => {
     const [timer, setTimer] = useState(0);
@@ -85,33 +108,69 @@ const StudentDashboard = ({ user, onLogout }) => {
     }
 
     if (readingBook) {
+        // Prepare pages - double pages for the flipbook effect
+        const displayPages = [...readingBook.pages];
+        if (displayPages.length % 2 !== 0) displayPages.push(""); // Pad to even number for better book feel
+
         return (
-            <div className="glass-card" style={{ maxWidth: '800px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <h3>{readingBook.title}</h3>
-                    <button onClick={() => setReadingBook(null)} style={{ width: 'auto' }}>Close Reader</button>
-                </div>
-
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '40px', borderRadius: '15px', minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                    {readingBook.pages[page] || "End of book."}
-                    {readingBook.fileName && (
-                        <div style={{ marginTop: '30px', padding: '15px', border: '1px dashed var(--glass-border)', borderRadius: '10px' }}>
-                            <p style={{ fontSize: '0.9rem', marginBottom: '10px' }}>This book has a full file uploaded:</p>
-                            <a href={`http://localhost:5000/uploads/${readingBook.fileName}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
-                                Open Full Book File
+            <div className="flipbook-overlay" style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.9)', zIndex: 1000,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+            }}>
+                <div style={{ width: '100%', maxWidth: '1000px', display: 'flex', justifyContent: 'space-between', padding: '20px', color: 'white' }}>
+                    <h3 className="text-gradient">{readingBook.title}</h3>
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        {readingBook.fileName && (
+                            <a href={`http://localhost:5000/uploads/${readingBook.fileName}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline', alignSelf: 'center' }}>
+                                Open Full File
                             </a>
-                        </div>
-                    )}
+                        )}
+                        <button onClick={() => setReadingBook(null)} style={{ border: '1px solid #ff4444', color: '#ff4444', background: 'transparent' }}>Close Reader</button>
+                    </div>
                 </div>
 
-                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between' }}>
-                    <button disabled={page === 0} onClick={() => setPage(page - 1)} style={{ width: 'auto' }}><ChevronLeft /></button>
-                    <span>Page {page + 1} of {readingBook.pages.length}</span>
-                    {page === readingBook.pages.length - 1 ? (
-                        <button onClick={() => setShowFeedback(true)} style={{ width: 'auto', background: 'var(--accent)' }}>Finish & Feedback</button>
-                    ) : (
-                        <button onClick={() => setPage(page + 1)} style={{ width: 'auto' }}><ChevronRight /></button>
-                    )}
+                <div className="book-container" style={{ perspective: '2000px', cursor: 'pointer' }}>
+                    <HTMLFlipBook
+                        width={450}
+                        height={600}
+                        size="stretch"
+                        minWidth={315}
+                        maxWidth={1000}
+                        minHeight={400}
+                        maxHeight={1533}
+                        maxShadowOpacity={0.5}
+                        showCover={true}
+                        mobileScrollSupport={true}
+                        className="demo-book"
+                    >
+                        {/* Cover Page */}
+                        <Page number="Cover" style={{ background: 'var(--primary)' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <Book size={100} color="var(--primary)" style={{ marginBottom: '30px' }} />
+                                <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: '#333' }}>{readingBook.title}</h1>
+                                <p style={{ color: '#666' }}>Category: {readingBook.category}</p>
+                                <div style={{ marginTop: '50px', opacity: 0.5 }}>Click edge to start reading</div>
+                            </div>
+                        </Page>
+
+                        {/* Content Pages */}
+                        {displayPages.map((p, i) => (
+                            <Page key={i} number={i + 1}>
+                                <div style={{ whiteSpace: 'pre-wrap' }}>{p || "The end of this segment."}</div>
+                                {i === readingBook.pages.length - 1 && (
+                                    <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                        <button onClick={() => setShowFeedback(true)} style={{ background: 'var(--accent)', color: 'white' }}>Finish & Feedback</button>
+                                    </div>
+                                )}
+                            </Page>
+                        ))}
+                    </HTMLFlipBook>
+                </div>
+
+                <div style={{ color: 'rgba(255,255,255,0.5)', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <MoveHorizontal size={20} />
+                    <span>Swipe or click corners to turn pages</span>
                 </div>
             </div>
         );
