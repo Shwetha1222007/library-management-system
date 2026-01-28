@@ -117,6 +117,7 @@ const AdminDashboard = ({ onLogout }) => {
                             onChange={e => setNewBook({ ...newBook, pages: e.target.value })}
                             style={{ width: '100%', marginTop: '10px', height: '80px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid #333', borderRadius: '12px', padding: '10px' }}
                         />
+                        <p style={{ fontSize: '0.7rem', color: '#888', marginTop: '5px' }}>💡 Tip: Use <b>Double Enter</b> to separate pages for the 3D Flipbook.</p>
                         <div style={{ marginTop: '10px' }}>
                             <label style={{ fontSize: '0.8rem', color: '#888' }}>Upload Full Book File (PDF/TXT):</label>
                             <input
@@ -128,12 +129,13 @@ const AdminDashboard = ({ onLogout }) => {
                         <button onClick={handleAddBook} style={{ marginTop: '15px' }}><Plus size={16} /> Add Full Book</button>
                     </div>
                     <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {books.map(b => (
+                        {books.slice(0, 100).map(b => (
                             <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--glass-border)' }}>
                                 <span>{b.title}</span>
                                 <Trash2 size={16} onClick={() => handleDeleteBook(b.id)} style={{ cursor: 'pointer', color: 'red' }} />
                             </div>
                         ))}
+                        {books.length > 100 && <p style={{ fontSize: '0.8rem', opacity: 0.5, textAlign: 'center' }}>... and {books.length - 100} more books</p>}
                     </div>
                 </div>
 

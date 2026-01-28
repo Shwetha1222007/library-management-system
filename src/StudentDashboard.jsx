@@ -60,7 +60,9 @@ const StudentDashboard = ({ user, onLogout }) => {
         alert(`Pre-booked ${bookTitle}! Admin notified. Collect within 24hrs.`);
     };
 
-    const filteredBooks = books.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+    const filteredBooks = books
+        .filter(b => String(b.title).toLowerCase().includes(search.toLowerCase()))
+        .slice(0, 50); // Limit to 50 books for performance
 
     const handleFeedbackSubmit = async () => {
         await axios.post('http://localhost:5000/api/feedback', {

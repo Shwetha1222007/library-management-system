@@ -18,8 +18,17 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  /* Changed from center to allow scrolling */
   overflow-x: hidden;
+}
+
+.app-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
 }
 
 * {
@@ -110,6 +119,7 @@ button:active {
 .text-gradient {
   background: linear-gradient(to right, #818cf8, #c084fc);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
