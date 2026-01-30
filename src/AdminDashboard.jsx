@@ -11,20 +11,27 @@ const AdminDashboard = ({ onLogout }) => {
     const [notifs, setNotifs] = useState([]);
     const [books, setBooks] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [bookViews, setBookViews] = useState([]);
+    const [activeTab, setActiveTab] = useState('overview'); // overview, users, books, views
     const [newBook, setNewBook] = useState({ title: '', category: '', pages: '' });
     const [selectedFile, setSelectedFile] = useState(null);
 
     const fetchData = async () => {
-        const [s, n, b, f] = await Promise.all([
+        const [s, n, b, f, u, bv] = await Promise.all([
             axios.get('http://localhost:5000/api/admin/stats'),
             axios.get('http://localhost:5000/api/admin/notifications'),
             axios.get('http://localhost:5000/api/books'),
-            axios.get('http://localhost:5000/api/admin/feedbacks')
+            axios.get('http://localhost:5000/api/admin/feedbacks'),
+            axios.get('http://localhost:5000/api/admin/users'),
+            axios.get('http://localhost:5000/api/admin/book-views')
         ]);
         setStats(s.data);
         setNotifs(n.data);
         setBooks(b.data);
         setFeedbacks(f.data);
+        setUsers(u.data);
+        setBookViews(bv.data);
     };
 
     useEffect(() => {
@@ -73,35 +80,138 @@ const AdminDashboard = ({ onLogout }) => {
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <h2 className="text-gradient" style={{ margin: 0 }}>Admin Panel</h2>
-                    <button className="upload-btn" style={{ width: 'auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)' }}>
-                        <Upload size={18} /> Upload Book
-                    </button>
                 </div>
                 <button onClick={onLogout} style={{ width: 'auto' }}>Logout</button>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-                <div className="glass-card" style={{ margin: 0 }}>
-                    <h3><Users /> Login Statistics</h3>
-                    <p>Total Logins Today: {stats.totalLogins}</p>
-                    <Bar data={chartData} options={{ responsive: true, color: 'white' }} />
-                </div>
-
-                <div className="glass-card" style={{ margin: 0 }}>
-                    <h3><Bell /> Recent Pre-Bookings</h3>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                        {notifs.map((n, i) => (
-                            <div key={i} style={{ borderBottom: '1px solid var(--glass-border)', padding: '10px 0' }}>
-                                <strong>{n.studentName}</strong> pre-booked <strong>{n.bookTitle}</strong>
-                                <p style={{ fontSize: '0.7rem' }}>{new Date(n.time).toLocaleString()}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {/* Tab Navigation */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '2px solid var(--glass-border)', paddingBottom: '10px' }}>
+                <button
+                    onClick={() => setActiveTab('overview')}
+                    style={{
+                        width: 'auto',
+                        padding: '0.5rem 1.5rem',
+                        background: activeTab === 'overview' ? 'var(--primary)' : 'transparent',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                >
+                    📊 Overview
+                </button>
+                <button
+                    onClick={() => setActiveTab('users')}
+                    style={{
+                        width: 'auto',
+                        padding: '0.5rem 1.5rem',
+                        background: activeTab === 'users' ? 'var(--primary)' : 'transparent',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                >
+                    👥 Registered Candidates ({users.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('books')}
+                    style={{
+                        width: 'auto',
+                        padding: '0.5rem 1.5rem',
+                        background: activeTab === 'books' ? 'var(--primary)' : 'transparent',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                >
+                    📚 Manage Books
+                </button>
+                <button
+                    onClick={() => setActiveTab('views')}
+                    style={{
+                        width: 'auto',
+                        padding: '0.5rem 1.5rem',
+                        background: activeTab === 'views' ? 'var(--primary)' : 'transparent',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                >
+                    👁️ Book Views Tracking
+                </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '40px' }}>
-                <div className="glass-card" style={{ margin: 0 }}>
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+                <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                        <div className="glass-card" style={{ margin: 0 }}>
+                            <h3><Users /> Login Statistics</h3>
+                            <p>Total Logins Today: {stats.totalLogins}</p>
+                            <Bar data={chartData} options={{ responsive: true, color: 'white' }} />
+                        </div>
+
+                        <div className="glass-card" style={{ margin: 0 }}>
+                            <h3><Bell /> Recent Pre-Bookings</h3>
+                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                {notifs.length === 0 ? <p>No pre-bookings yet.</p> : notifs.map((n, i) => (
+                                    <div key={i} style={{ borderBottom: '1px solid var(--glass-border)', padding: '10px 0' }}>
+                                        <strong>{n.studentName}</strong> pre-booked <strong>{n.bookTitle}</strong>
+                                        <p style={{ fontSize: '0.7rem' }}>{new Date(n.time).toLocaleString()}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="glass-card">
+                        <h3><Users /> Student Feedbacks</h3>
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            {feedbacks.length === 0 ? <p>No feedback yet.</p> : feedbacks.map((f, i) => (
+                                <div key={i} style={{ padding: '10px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', marginBottom: '10px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <p style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{f.studentName} <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.8rem' }}>on {f.bookTitle}</span></p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                            <Star size={12} fill="#fbbf24" stroke="#fbbf24" />
+                                            <span style={{ fontSize: '0.9rem', color: '#fbbf24' }}>{f.rating}</span>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontStyle: 'italic', margin: '5px 0' }}>"{f.message}"</p>
+                                    <p style={{ fontSize: '0.7rem', opacity: 0.5 }}>{new Date(f.date).toLocaleString()}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Registered Users Tab */}
+            {activeTab === 'users' && (
+                <div className="glass-card">
+                    <h3><Users /> All Registered Candidates</h3>
+                    {users.length === 0 ? (
+                        <p>No candidates registered yet.</p>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid var(--glass-border)' }}>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Name</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Roll Number</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Department</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map((user, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                            <td style={{ padding: '12px' }}>{user.name}</td>
+                                            <td style={{ padding: '12px' }}>{user.rollNo}</td>
+                                            <td style={{ padding: '12px' }}>{user.department}</td>
+                                            <td style={{ padding: '12px' }}>{user.year}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Manage Books Tab */}
+            {activeTab === 'books' && (
+                <div className="glass-card">
                     <h3><BookOpen /> Manage Books</h3>
                     <div style={{ marginBottom: '20px' }}>
                         <input placeholder="Title" value={newBook.title} onChange={e => setNewBook({ ...newBook, title: e.target.value })} />
@@ -128,36 +238,65 @@ const AdminDashboard = ({ onLogout }) => {
                         </div>
                         <button onClick={handleAddBook} style={{ marginTop: '15px' }}><Plus size={16} /> Add Full Book</button>
                     </div>
-                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {books.slice(0, 100).map(b => (
+                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {books.length === 0 ? <p>No books added yet.</p> : books.map(b => (
                             <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--glass-border)' }}>
-                                <span>{b.title}</span>
+                                <div>
+                                    <span style={{ fontWeight: 'bold' }}>{b.title}</span>
+                                    <p style={{ fontSize: '0.8rem', color: '#888', margin: '5px 0' }}>Category: {b.category}</p>
+                                    {b.ratings && b.ratings.length > 0 && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <Star size={12} fill="#fbbf24" stroke="#fbbf24" />
+                                            <span style={{ fontSize: '0.8rem' }}>
+                                                {(b.ratings.reduce((a, b) => a + b, 0) / b.ratings.length).toFixed(1)} ({b.ratings.length} reviews)
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                                 <Trash2 size={16} onClick={() => handleDeleteBook(b.id)} style={{ cursor: 'pointer', color: 'red' }} />
                             </div>
                         ))}
-                        {books.length > 100 && <p style={{ fontSize: '0.8rem', opacity: 0.5, textAlign: 'center' }}>... and {books.length - 100} more books</p>}
                     </div>
                 </div>
+            )}
 
-                <div className="glass-card" style={{ margin: 0 }}>
-                    <h3><Users /> Student Feedbacks</h3>
-                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                        {feedbacks.length === 0 ? <p>No feedback yet.</p> : feedbacks.map((f, i) => (
-                            <div key={i} style={{ padding: '10px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', marginBottom: '10px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <p style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{f.studentName} <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.8rem' }}>on {f.bookTitle}</span></p>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                        <Star size={12} fill="#fbbf24" stroke="#fbbf24" />
-                                        <span style={{ fontSize: '0.9rem', color: '#fbbf24' }}>{f.rating}</span>
-                                    </div>
-                                </div>
-                                <p style={{ fontStyle: 'italic', margin: '5px 0' }}>"{f.message}"</p>
-                                <p style={{ fontSize: '0.7rem', opacity: 0.5 }}>{new Date(f.date).toLocaleString()}</p>
-                            </div>
-                        ))}
-                    </div>
+            {/* Book Views Tracking Tab */}
+            {activeTab === 'views' && (
+                <div className="glass-card">
+                    <h3>👁️ Book Views Tracking</h3>
+                    <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '20px' }}>
+                        Track which candidates are viewing which books in real-time
+                    </p>
+                    {bookViews.length === 0 ? (
+                        <p>No book views tracked yet.</p>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid var(--glass-border)' }}>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Student Name</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Roll Number</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Book Title</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>Viewed At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {bookViews.map((view, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                            <td style={{ padding: '12px' }}>{view.studentName}</td>
+                                            <td style={{ padding: '12px' }}>{view.rollNo}</td>
+                                            <td style={{ padding: '12px' }}>{view.bookTitle}</td>
+                                            <td style={{ padding: '12px', fontSize: '0.85rem', color: '#888' }}>
+                                                {new Date(view.timestamp).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
         </div>
     );
 };
