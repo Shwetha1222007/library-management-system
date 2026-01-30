@@ -129,6 +129,25 @@ app.post('/api/feedback', async (req, res) => {
     res.json({ success: true });
 });
 
+// Track book views
+app.post('/api/track-view', async (req, res) => {
+    const { studentName, rollNo, bookTitle, bookId } = req.body;
+    const data = await getData();
+
+    if (!data.bookViews) data.bookViews = [];
+
+    data.bookViews.push({
+        studentName,
+        rollNo,
+        bookTitle,
+        bookId,
+        timestamp: new Date().toISOString()
+    });
+
+    await saveData(data);
+    res.json({ success: true });
+});
+
 // Admin Stats
 app.get('/api/admin/stats', async (req, res) => {
     const data = await getData();
@@ -144,6 +163,16 @@ app.get('/api/admin/stats', async (req, res) => {
         totalLogins: todayLogs.length,
         deptWiseLogins: deptWiseLogins,
     });
+});
+
+app.get('/api/admin/users', async (req, res) => {
+    const data = await getData();
+    res.json(data.users || []);
+});
+
+app.get('/api/admin/book-views', async (req, res) => {
+    const data = await getData();
+    res.json((data.bookViews || []).reverse());
 });
 
 app.get('/api/admin/notifications', async (req, res) => {
