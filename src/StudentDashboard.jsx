@@ -37,7 +37,7 @@ const StudentDashboard = ({ user, onLogout }) => {
 
     useEffect(() => {
         const fetchBooks = async () => {
-            const res = await axios.get('http://localhost:5000/api/books');
+            const res = await axios.get('/api/books');
             setBooks(res.data);
         };
         fetchBooks();
@@ -56,13 +56,13 @@ const StudentDashboard = ({ user, onLogout }) => {
     };
 
     const handlePreBook = async (bookTitle) => {
-        await axios.post('http://localhost:5000/api/prebook', { studentName: user.name, bookTitle });
+        await axios.post('/api/prebook', { studentName: user.name, bookTitle });
         alert(`Pre-booked ${bookTitle}! Admin notified. Collect within 24hrs.`);
     };
 
     const handleReadBook = async (book) => {
         // Track the book view
-        await axios.post('http://localhost:5000/api/track-view', {
+        await axios.post('/api/track-view', {
             studentName: user.name,
             rollNo: user.rollNo,
             bookTitle: book.title,
@@ -77,7 +77,7 @@ const StudentDashboard = ({ user, onLogout }) => {
         .slice(0, 50); // Limit to 50 books for performance
 
     const handleFeedbackSubmit = async () => {
-        await axios.post('http://localhost:5000/api/feedback', {
+        await axios.post('/api/feedback', {
             studentName: user.name,
             bookTitle: readingBook.title,
             message: feedbackMsg,
@@ -136,7 +136,7 @@ const StudentDashboard = ({ user, onLogout }) => {
                     <h3 className="text-gradient">{readingBook.title}</h3>
                     <div style={{ display: 'flex', gap: '15px' }}>
                         {readingBook.fileName && (
-                            <a href={`http://localhost:5000/uploads/${readingBook.fileName}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline', alignSelf: 'center' }}>
+                            <a href={`/uploads/${readingBook.fileName}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline', alignSelf: 'center' }}>
                                 Open Full File
                             </a>
                         )}
