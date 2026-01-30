@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node server.js",
+    "start-all": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -12,10 +14,13 @@
   "dependencies": {
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
+    "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "framer-motion": "^12.27.1",
+    "fs-extra": "^11.3.3",
     "lucide-react": "^0.562.0",
+    "multer": "^2.0.2",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.0",
